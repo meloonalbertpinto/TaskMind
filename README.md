@@ -108,6 +108,6 @@ GitHub / Jira Integrations
 
 ## 👨‍💻 Author
 
-Calwin Fernandes: calwin2499
-Joel Pinto: pinto-joel
-Meloon Albert Pinto: meloonalbertpinto
+- Calwin Fernandes: calwin2499
+- Joel Pinto: pinto-joel
+- Meloon Albert Pinto: meloonalbertpinto

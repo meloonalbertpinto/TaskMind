@@ -108,4 +108,6 @@ GitHub / Jira Integrations
 
 ## 👨‍💻 Author
 
-Developed as a prototype to demonstrate how AI can transform engineering meeting discussions into structured development tasks.
+Calwin Fernandes: calwin2499
+Joel Pinto: pinto-joel
+Meloon Albert Pinto: meloonalbertpinto

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prothon AI - Universal Live Translation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            color: #f9fafb;
+            overflow-x: hidden;
+        }
+        .glass {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .recording-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); opacity: 0.9; box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .message-entry {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        select option {
+            background: #111827;
+            color: white;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+    <!-- Header -->
+    <header class="fixed top-0 w-full p-6 flex justify-between items-center z-50 glass mb-8">
+        <div class="flex items-center gap-2">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <i data-lucide="mic" class="text-white w-6 h-6"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight">Prothon<span class="text-blue-400">AI</span></h1>
+        </div>
+        <div id="status-badge" class="px-4 py-1.5 rounded-full border border-gray-700 bg-gray-900/50 text-sm flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-gray-500" id="status-dot"></div>
+            <span id="status-text" class="text-gray-400">Disconnected</span>
+        </div>
+    </header>
+
+    <main class="w-full max-w-6xl mt-24 flex flex-col md:flex-row gap-6 flex-grow">
+        <!-- Sidebar Settings -->
+        <aside class="w-full md:w-72 flex flex-col gap-6">
+            <div class="glass rounded-3xl p-6 flex flex-col gap-6">
+                <div class="flex items-center gap-2 border-b border-white/5 pb-4">
+                    <i data-lucide="settings-2" class="w-5 h-5 text-blue-400"></i>
+                    <h3 class="font-semibold">Settings</h3>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500 uppercase font-bold tracking-widest block mb-2">Target Mode</label>
+                        <select id="mode-select" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all">
+                            <option value="translate">Translate to English</option>
+                            <option value="transcribe">Transcribe (Direct)</option>
+                        </select>
+                    </div>
+
+                    <div id="lang-container" class="hidden">
+                        <label class="text-xs text-gray-500 uppercase font-bold tracking-widest block mb-2">Output Language</label>
+                        <select id="lang-select" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all">
+                            <option value="hi-IN">Hindi</option>
+                            <option value="kn-IN">Kannada</option>
+                            <option value="mr-IN">Marathi</option>
+                            <option value="en-IN">English (Indian)</option>
+                            <option value="unknown">Auto-Detect</option>
+                        </select>
+                    </div>
+                    
+                    <div class="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10">
+                        <p class="text-[10px] text-blue-400 font-medium mb-1">PRO TIP</p>
+                        <p class="text-xs text-gray-400 leading-relaxed italic">"Translate" always outputs English. Use "Transcribe" to get output in the selected language.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass rounded-3xl p-6 flex flex-col gap-4">
+                 <div class="flex items-center gap-2 border-b border-white/5 pb-4">
+                    <i data-lucide="info" class="w-5 h-5 text-gray-400"></i>
+                    <h3 class="font-semibold">System Info</h3>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between text-xs">
+                        <span class="text-gray-500">Latency</span>
+                        <span class="text-emerald-400">~1.2s</span>
+                    </div>
+                    <div class="flex justify-between text-xs">
+                        <span class="text-gray-500">Model</span>
+                        <span class="text-gray-300">Saaras v3</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Transcription Display -->
+        <div class="flex-grow flex flex-col gap-6">
+            <div class="glass rounded-3xl p-8 flex flex-col gap-6 shadow-2xl relative overflow-hidden h-[600px]">
+                <!-- Subtle Background Gradients -->
+                <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/10 blur-[100px] rounded-full"></div>
+                <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/10 blur-[100px] rounded-full"></div>
+
+                <div class="flex justify-between items-center border-b border-white/5 pb-4">
+                    <h2 class="text-xl font-medium text-gray-300" id="header-title">Universal Live Translation</h2>
+                    <div class="flex gap-2 items-center">
+                        <button id="analyze-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-xs font-medium transition-all disabled:opacity-50" title="Analyze with Gemini">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                            Insights
+                        </button>
+                        <button id="clear-btn" class="p-2 rounded-lg hover:bg-white/5 text-gray-400 transition-colors">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transcription Display -->
+                <div id="transcript-container" class="flex-grow overflow-y-auto space-y-4 pr-2">
+                    <div class="flex flex-col items-center justify-center h-full text-center space-y-4 text-gray-500" id="empty-state">
+                        <div class="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center">
+                            <i data-lucide="message-square" class="w-8 h-8 opacity-20"></i>
+                        </div>
+                        <p class="max-w-xs">Start the bot to begin. The bot will automatically capture system audio.</p>
+                    </div>
+                </div>
+
+                <!-- Controls -->
+                <div class="flex items-center justify-center gap-12 pt-4">
+                    <button id="record-btn" class="group relative w-20 h-20 rounded-full bg-white flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+                        <i data-lucide="play" id="btn-icon" class="text-gray-900 w-8 h-8 fill-gray-900 ml-1"></i>
+                        <div id="recording-indicator" class="hidden absolute -inset-2 border-2 border-emerald-500 rounded-full recording-pulse"></div>
+                    </button>
+
+                    <button id="stop-btn" class="hidden group w-20 h-20 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center transition-all duration-300 hover:bg-red-500 hover:border-red-500 text-red-500 hover:text-white shadow-lg">
+                        <i data-lucide="square" class="w-8 h-8 fill-current"></i>
+                    </button>
+                </div>
+                <div id="recording-label" class="text-center text-sm font-medium text-gray-400 mt-2">Click to start fetching</div>
+            </div>
+        </div>
+
+        <!-- Insights Sidebar (Hidden by default) -->
+        <aside id="insights-container" class="hidden w-full md:w-96 flex flex-col gap-6 animate-in slide-in-from-right duration-500">
+            <div class="glass rounded-3xl p-6 flex flex-col gap-6 h-full max-h-[600px] overflow-y-auto">
+                <div class="flex items-center justify-between border-b border-white/5 pb-4">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-blue-400"></i>
+                        <h3 class="font-semibold">Meeting Insights</h3>
+                    </div>
+                    <button id="close-insights" class="text-gray-500 hover:text-white">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <div id="insights-content" class="space-y-6">
+                    <!-- Loading state -->
+                    <div id="insights-loading" class="hidden flex flex-col items-center justify-center py-12 text-center space-y-4">
+                        <div class="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-sm text-gray-400">Gemini is analyzing your conversation...</p>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="insights-results" class="hidden space-y-6">
+                        <section>
+                            <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-2">Summary</h4>
+                            <p id="res-summary" class="text-sm text-gray-300 leading-relaxed"></p>
+                        </section>
+                        
+                        <section>
+                            <h4 class="text-xs font-bold text-purple-400 uppercase tracking-widest mb-2">Key Points</h4>
+                            <ul id="res-points" class="text-sm text-gray-400 space-y-2 list-disc pl-4"></ul>
+                        </section>
+
+                        <section>
+                            <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-2">Action Items</h4>
+                            <ul id="res-actions" class="text-sm text-gray-400 space-y-2 list-disc pl-4"></ul>
+                        </section>
+
+                         <section>
+                            <h4 class="text-xs font-bold text-amber-400 uppercase tracking-widest mb-2">Decisions</h4>
+                            <ul id="res-decisions" class="text-sm text-gray-400 space-y-2 list-disc pl-4"></ul>
+                        </section>
+
+                        <section class="border-t border-white/5 pt-6 mt-6">
+                            <h4 class="text-xs font-bold text-blue-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                Ask about the meeting
+                            </h4>
+                            <div id="qa-chat-history" class="space-y-4 mb-4 max-h-48 overflow-y-auto pr-1">
+                                <!-- Q&A messages will appear here -->
+                            </div>
+                            <div class="flex gap-2">
+                                <input type="text" id="qa-input" placeholder="Type a question..." class="flex-grow bg-white/5 border border-white/10 rounded-xl p-3 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all">
+                                <button id="qa-send-btn" class="p-3 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all disabled:opacity-50">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
